@@ -19,19 +19,6 @@ class GameViewController: UIViewController {
             scene.scaleMode = .aspectFill
             view.presentScene(scene)
         }
-        
-        /*if let view = self.view as! SKView? {
-            if let scene = SKScene(fileNamed: "GameScene") {
-                scene.scaleMode = .aspectFill
-                
-                view.presentScene(scene)
-            }
-            
-            view.ignoresSiblingOrder = false
-            
-            view.showsFPS = true
-            view.showsNodeCount = true
-        }*/
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {

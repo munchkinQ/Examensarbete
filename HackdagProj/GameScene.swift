@@ -6,15 +6,11 @@
 //
 /* README: this is the main file for the game, with all of the game physics and major functions of gameplay. I've added some comments for added readability, to point at what chunk of code does what.
  
- TODO: ensure centering of player character doesn't make the ground hover (MVP)
  TODO: replace free assets with own assets (if time allows)
  TODO: add remaining music tracks (if time allows)
- TODO: sprite shake when taking damage (if time allows)
- TODO: game over when at zero lives (MVP)
  TODO: merchant cutscene (Nice-to-have)
  TODO: merchant dialogue (nice-to-have)
- TODO: wizard tower end cutscene and win game (MVP)
- TODO: more puzzles placed down, more enemies, more stars (MVP)
+ TODO: more puzzles placed down, more enemies, more stars
  TODO: finish WIP assets (portraits, etc) (nice-to-have)
  TODO: animate enemies (nice-to-have)
 
@@ -35,21 +31,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var star: SKSpriteNode!
     var starCounter: SKSpriteNode!
     var starCounterText: SKLabelNode!
+    var bg1: SKSpriteNode!
+    var bg2: SKSpriteNode!
+    var bg3: SKSpriteNode!
     var heart: SKSpriteNode!
     var heart2: SKSpriteNode!
     var heart3: SKSpriteNode!
     var skeleton: SKSpriteNode!
     var clergy: SKSpriteNode!
+    var tower: SKSpriteNode!
     var moveLeft = false
     var moveRight = false
     var canJump = false
     var boost = false
     var stars = 0
-    var lives = 3 // unused
+    var lives = 3
     var foxFacingRight = true
     var foxFacingLeft = false
     var canGust = true
     var hasHadClergyDialogue = false
+    var isStaggered = false
+    var hasStars = false
     var foxWalkingFrames = [SKTexture]()
     var textureAtlas = SKTextureAtlas(named: "Fox")
     var cameraNode: SKCameraNode!
@@ -70,6 +72,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         heart = childNode(withName: "heart") as? SKSpriteNode
         heart2 = childNode(withName: "heart2") as? SKSpriteNode
         heart3 = childNode(withName: "heart3") as? SKSpriteNode
+        bg1 = childNode(withName: "BG1") as? SKSpriteNode
+        bg2 = childNode(withName: "BG2") as? SKSpriteNode
+        bg3 = childNode(withName: "BG3") as? SKSpriteNode
+        tower = childNode(withName: "tower") as? SKSpriteNode
         
         // merchant -- WIP
         if let merchantNode = childNode(withName: "merchant") as? SKSpriteNode {
@@ -87,6 +93,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         var dialogueBox: SKSpriteNode!
         var myrranPortrait: SKSpriteNode!
         var clergyPortrait: SKSpriteNode!
+        var malgrenPortrait: SKSpriteNode!
             
         var dialogueLines: [(name: String, text: String)] = []
         var currentLineIndex = 0
@@ -106,7 +113,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         fox?.physicsBody?.allowsRotation = false
         fox?.physicsBody?.categoryBitMask = 1
         fox?.physicsBody?.collisionBitMask = 2
-        fox?.physicsBody?.contactTestBitMask = 2 | 4 | 8
+        fox?.physicsBody?.contactTestBitMask = 2 | 4 | 8 | 16
 
         // ground physics
         ground?.physicsBody = SKPhysicsBody(rectangleOf: ground!.size)
@@ -122,6 +129,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         skeleton?.physicsBody?.categoryBitMask = 8
         skeleton?.physicsBody?.collisionBitMask = 2
         skeleton?.physicsBody?.contactTestBitMask = 1 | 2
+        
+        // tower physics
+        tower?.physicsBody = SKPhysicsBody(rectangleOf: tower!.size)
+        tower?.physicsBody?.isDynamic = false
+        tower?.physicsBody?.categoryBitMask = 16
+        tower?.physicsBody?.contactTestBitMask = 1
         
         // camera init
         cameraNode = SKCameraNode()
@@ -202,6 +215,30 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             cameraNode.addChild(gustButton)
         }
         
+        if let bg1 = childNode(withName: "BG1") as? SKSpriteNode {
+            let pos = convert(bg1.position, to: cameraNode)
+            bg1.removeFromParent()
+            bg1.position = pos
+            bg1.zPosition = -1000
+            cameraNode.addChild(bg1)
+        }
+        
+        if let bg2 = childNode(withName: "BG2") as? SKSpriteNode {
+            let pos = convert(bg2.position, to: cameraNode)
+            bg2.removeFromParent()
+            bg2.position = pos
+            bg2.zPosition = -999
+            cameraNode.addChild(bg2)
+        }
+        
+        if let bg3 = childNode(withName: "BG3") as? SKSpriteNode {
+            let pos = convert(bg3.position, to: cameraNode)
+            bg3.removeFromParent()
+            bg3.position = pos
+            bg3.zPosition = -998
+            cameraNode.addChild(bg3)
+        }
+        
         // fox animation
         for i in 0..<textureAtlas.textureNames.count {
             let textureNames = "foxWalk" + String(i)
@@ -248,9 +285,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         } else {
             fox.physicsBody?.velocity.dx = 0
         }
-                
-        let cameraMoveAction = SKAction.move(to: fox.position, duration: 0.2)
-        cameraNode.run(cameraMoveAction)
+        
+        // camera
+        let foxX = fox.position.x
+            let foxY = fox.position.y
+            var targetY: CGFloat
+
+            if foxY < 100 {
+                targetY = foxY + 135
+            } else {
+                targetY = foxY
+            }
+
+            let targetPosition = CGPoint(x: foxX, y: targetY)
+            let cameraMoveAction = SKAction.move(to: targetPosition, duration: 0.2)
+            cameraNode.run(cameraMoveAction)
         
     }
     
@@ -367,17 +416,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         
         // merchant
-        if (nodeA.name == "clergy" && nodeB.name == "Fox") || (nodeB.name == "clergy" && nodeA.name == "Fox") && hasHadClergyDialogue == false {
+        if (nodeA.name == "clergy" && nodeB.name == "Fox" && !hasHadClergyDialogue) || (nodeB.name == "clergy" && nodeA.name == "Fox" && !hasHadClergyDialogue) {
             triggerFirstClergyDialogue()
         }
         
-        if (nodeA.name == "clergy" && nodeB.name == "Fox") || (nodeB.name == "clergy" && nodeA.name == "Fox") && hasHadClergyDialogue == true {
+        if (nodeA.name == "clergy" && nodeB.name == "Fox"  && hasHadClergyDialogue) || (nodeB.name == "clergy" && nodeA.name == "Fox" && hasHadClergyDialogue) {
             triggerClergyDialogue()
         }
         
         // get hit by skellyboy
-        if (nodeA.name == "skeleton" && nodeB.name == "Fox") || (nodeB.name == "skeleton" && nodeA.name == "Fox") {
+        if (nodeA.name == "skeleton" && nodeB.name == "Fox" && !isStaggered) || (nodeB.name == "skeleton" && nodeA.name == "Fox" && !isStaggered) {
             loseHeart()
+            flashFox()
+            shakeFox()
+            invincibility()
+        }
+        
+        // finish game trigger point
+        if (nodeA.name == "tower" && nodeB.name == "Fox") || (nodeB.name == "tower" && nodeA.name == "Fox") {
+            checkIfHasStars()
         }
         
         func loseHeart() {
@@ -390,7 +447,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     heart2.isHidden = true
                 } else if lives == 0 {
                     heart.isHidden = true
-                    // TODO: make superfrän gameover logic
+                    triggerGameOver()
                 }
             }
         }
@@ -399,9 +456,102 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let skeleton = nodeA.name == "skeleton" ? nodeA : nodeB
             skeleton.physicsBody?.isDynamic = true
             skeleton.physicsBody?.applyImpulse(CGVector(dx: 500, dy: 0))
+            isStaggered = true
+            staggered()
         }
 
     }
+    
+    // game over logic, etc
+    func triggerGameOver() {
+        moveLeft = false
+        moveRight = false
+        boost = false
+        fox.removeAllActions()
+        fox.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
+        fox.isPaused = true
+
+        let overlay = SKSpriteNode(color: .black, size: self.size)
+        overlay.position = CGPoint(x: 0, y: 0)
+        overlay.alpha = 0.0
+        overlay.zPosition = 9999
+        overlay.name = "gameOverOverlay"
+        cameraNode.addChild(overlay)
+
+        let fadeIn = SKAction.fadeIn(withDuration: 1.5)
+        overlay.run(fadeIn)
+
+        let showLabel = SKAction.run {
+            let gameOverLabel = SKLabelNode(text: "Game Over")
+            gameOverLabel.fontSize = 80
+            gameOverLabel.fontColor = .white
+            gameOverLabel.fontName = "Courier-Bold"
+            gameOverLabel.position = CGPoint(x: 0, y: 0)
+            gameOverLabel.alpha = 0
+            gameOverLabel.zPosition = 10000
+            overlay.addChild(gameOverLabel)
+
+            gameOverLabel.run(SKAction.fadeIn(withDuration: 1.0))
+        }
+
+        let restart = SKAction.run {
+            if let newScene = GameScene(fileNamed: "GameScene") {
+                newScene.scaleMode = .aspectFill
+                self.view?.presentScene(newScene, transition: .fade(withDuration: 1.0))
+            }
+        }
+
+        run(SKAction.sequence([
+            SKAction.wait(forDuration: 1.5),
+            showLabel,
+            SKAction.wait(forDuration: 3.0),
+            restart
+        ]))
+    }
+
+    // takes damage
+    func flashFox() {
+        let flash = SKAction.sequence([
+            SKAction.colorize(with: .red, colorBlendFactor: 1.0, duration: 0.1),
+            SKAction.wait(forDuration: 0.05),
+            SKAction.colorize(withColorBlendFactor: 0.0, duration: 0.1)
+        ])
+        fox.run(flash)
+    }
+
+    func shakeFox() {
+        let moveLeft = SKAction.moveBy(x: -10, y: 0, duration: 0.05)
+        let moveRight = SKAction.moveBy(x: 20, y: 0, duration: 0.05)
+        let moveBack = SKAction.moveBy(x: -10, y: 0, duration: 0.05)
+        let sequence = SKAction.sequence([moveLeft, moveRight, moveBack])
+        fox.run(sequence)
+    }
+
+    func invincibility(duration: TimeInterval = 2.0) {
+        let fadeOut = SKAction.fadeAlpha(to: 0.3, duration: 0.1)
+        let fadeIn = SKAction.fadeAlpha(to: 1.0, duration: 0.1)
+        let flicker = SKAction.sequence([fadeOut, fadeIn])
+        let doFlicker = SKAction.repeat(flicker, count: Int(duration / 0.2))
+        fox.run(doFlicker)
+    }
+    
+    func staggered(duration: TimeInterval = 5.0) {
+        let flashing = SKAction.sequence([
+            SKAction.colorize(with: .cyan, colorBlendFactor: 1.0, duration: 0.2),
+            SKAction.wait(forDuration: 0.1),
+            SKAction.colorize(withColorBlendFactor: 0.0, duration: 0.2)
+        ])
+        skeleton.run(flashing)
+        
+        let skeletonRecovering = SKAction.sequence([
+            SKAction.wait(forDuration: duration),
+            SKAction.run { [weak self] in
+                self?.isStaggered = false
+            }
+        ])
+        skeleton.run(skeletonRecovering)
+    }
+
     
     // merchant -- WIP
     func triggerFirstClergyDialogue() {
@@ -410,6 +560,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func triggerClergyDialogue() {
         
+    }
+    
+    // finish game
+    func triggerEnd() {
+        let transition = SKTransition.fade(withDuration: 1.0)
+        let endScene = EndScene(size: self.size)
+        endScene.scaleMode = .aspectFill
+        self.view?.presentScene(endScene, transition: transition)
+    }
+    
+    func checkIfHasStars() {
+        if stars >= 4 {
+            hasStars = true
+            triggerEnd()
+        }
+        else {
+            return
+            // TODO: implement alternate dialogue telling player to get more stars
+        }
     }
     
     // stars

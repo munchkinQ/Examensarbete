@@ -1,24 +1,21 @@
 //
-//  Scene2.swift
-//  Xproj
+//  EndScene.swift
+//  HackdagProj
 //
-//  Created by Åsa Ericson Östmark on 2025-03-06.
+//  Created by Åsa Ericson Östmark on 2025-05-24.
 //
-/* README: in this scene I've set up an intro cutscene to the game, with dialogue, music, and portraits for the different characters. It's not *fully* implemented... yet, so it looks very, euhm, *rough* atm.  Stay tuned. */
 
 import GameplayKit
 import SpriteKit
 import AVFoundation
 
-class IntroCutScene: SKScene {
+class EndScene: SKScene {
     
     var dialogueLabel: SKLabelNode!
     var nameLabel: SKLabelNode!
     var dialogueBox: SKSpriteNode!
     var myrrenPortrait: SKSpriteNode!
-    var unknownPortrait: SKSpriteNode!
     var malgrenPortrait: SKSpriteNode!
-    var clergyPortrait: SKSpriteNode!
     var musicPlayer: AVAudioPlayer?
     
     var dialogueLines: [(name: String, text: String)] = []
@@ -43,19 +40,12 @@ class IntroCutScene: SKScene {
         addChild(background)
         
         // portraits
-        myrrenPortrait = SKSpriteNode(imageNamed: "wip-portrait")
+        myrrenPortrait = SKSpriteNode(imageNamed: "portrait-fox")
         myrrenPortrait.position = CGPoint(x: size.width * 0.2, y: size.height * 0.6)
         myrrenPortrait.zPosition = 1
         myrrenPortrait.setScale(0.2)
         addChild(myrrenPortrait)
         myrrenPortrait.isHidden = true
-        
-        unknownPortrait = SKSpriteNode(imageNamed: "wip-portrait")
-        unknownPortrait.position = CGPoint(x: size.width * 0.2, y: size.height * 0.6)
-        unknownPortrait.zPosition = 1
-        unknownPortrait.setScale(0.2)
-        addChild(unknownPortrait)
-        unknownPortrait.isHidden = true
         
         malgrenPortrait = SKSpriteNode(imageNamed: "wip-portrait")
         malgrenPortrait.position = CGPoint(x: size.width * 0.2, y: size.height * 0.6)
@@ -92,49 +82,49 @@ class IntroCutScene: SKScene {
         dialogueLabel.zPosition = 3
         dialogueBox.addChild(dialogueLabel)
     }
-    // more dialogue exists but isn't here yet
+    
     func loadDialogue() {
             dialogueLines = [
-                ("Myrren", "*sigh*"),
-                ("Myrren", "Another long day."),
-                ("Myrren", "Another day of being different."),
-                ("Myrren", "Of feeling like I don't belong."),
-                ("Myrren", "What's wrong with me?"),
-                ("Myrren", "Why can't I just be normal?"),
+                ("Malgren", "Look who it is, if it isn’t my favourite little critter."),
+                ("Myrren", "Take me back!"),
+                ("Myrren", "I want to go home."),
+                ("Malgren", "Didn’t that quacking old pirate tell you already?"),
+                ("Malgren", "There is no going home anymore."),
+                ("Malgren", "As soon as you set foot in Starvale there’s no going back."),
+                ("Malgren", "Starvale is your home now, like it ot not."),
+                ("Myrren", "I know there’s a way. Clergy told me all about it."),
+                ("Malgren", "Did he now?"),
+                ("Myrren", "Yes. I know what it takes to get back home."),
+                ("Malgren", "Well, then you’ll also know that Clergy has spent the better part of his life here in Starvale trying to get enough stars to go home himself. "),
+                ("Malgren", "With no such luck, might I add."),
+                ("Malgren", "How are you planning to do what he’s failed to do for all this time?"),
+                ("Myrren", "I already did it. "),
+                ("Myrren", "I have all the fallen stars I need."),
+                ("Malgren", "!!!"),
+                ("Myrren", "So take me back."),
+                ("Malgren", "How’s that even possible?"),
+                ("Malgren", "And in just one night??"),
+                ("Myrren", "A promise is a promise."),
+                ("Malgren", "I never promised *you* anything."),
                 ("Myrren", "!!!"),
-                ("Myrren", "A falling star!"),
-                ("Myrren", "Quick! I should make a wish!"),
-                ("Myrren", "I wish..."),
-                ("Myrren", "I wish..."),
-                ("Myrren", "I wish I was somewhere else. Anywhere else."),
-                ("Myrren", "Someone else."),
-                ("Myrren", "I wish I wasn't me, wasn't here, wasn't now."),
-                ("Myrren", "Please."),
-                ("Myrren", "..."),
-                ("Myrren", "..."),
-                ("Myrren", "..."),
-                ("Myrren", "Well, it was worth a try."),
-                ("Myrren", "I should go to bed, it's another long day tomorrow and I need the rest."),
-                ("Myrren", "Zzzzzz"),
-                ("Myrren", "Huh?"),
+                ("Myrren", "B-but!"),
+                ("Malgren", "But..."),
+                ("Malgren", "I shall do it either way."),
                 ("Myrren", "!!!"),
-                ("Myrren", "Where am I?!"),
-                ("Myrren", "What's going on?"),
-                ("???", "Ohohoho..."),
-                ("Myrren", "Who's there?"),
-                ("Myrren", "Who's laughing??"),
-                ("Strange Man", "What have we here? A lone girl wished upon a star, hmmm?"),
-                ("Myrren", "How do you know about that?"),
-                ("Strange Man", "It's the only way to get here, so of course I know. Wished to get away, did you? Wished to be far away from home?"),
-                ("Strange Man", "Well, you got your wish."),
-                ("Myrren", "!!!"),
-                ("Strange Man", "But look at my manners! I haven't even introduced myself."),
-                ("Malgren", "The name's Malgren, and who might you be?"),
+                ("Malgren", "Very well…"),
+                ("Malgren", "Give me the stars."),
+                ("Myrren", "And you’ll take me home?"),
+                ("Myrren", "I’ll be me again?"),
+                ("Malgren", "Yes."),
+                ("Malgren", "Go to sleep now."),
+                ("Malgren", "And you shall wake up as yourself, in your own bed."),
+                ("Malgren", "And Starvale..."),
+                ("Malgren", "Will have been nothing but a dream."),
             ]
         }
     
     func loadMusic() {
-        if let url = Bundle.main.url(forResource: "danger", withExtension: "mp4") {
+        if let url = Bundle.main.url(forResource: "the-end", withExtension: "mp4") {
             musicPlayer = try? AVAudioPlayer(contentsOf: url)
             musicPlayer?.numberOfLoops = -1
             musicPlayer?.prepareToPlay()
@@ -142,29 +132,23 @@ class IntroCutScene: SKScene {
     }
     
     func showNextLine() {
-        if currentLineIndex == 25 {
+        if currentLineIndex == 0 {
             musicPlayer?.play()
         }
-        if currentLineIndex < dialogueLines.count {
-            let speaker = dialogueLines[currentLineIndex].name
-            nameLabel.text = speaker
-            startTypingText(dialogueLines[currentLineIndex].text)
-                    if speaker == "Myrren" {
-                        myrrenPortrait.isHidden = false
-                        malgrenPortrait.isHidden = true
-                        unknownPortrait.isHidden = true
-                    } else if speaker == "Malgren" {
-                        myrrenPortrait.isHidden = true
-                        malgrenPortrait.isHidden = false
-                        unknownPortrait.isHidden = true
-                    } else {
-                        myrrenPortrait.isHidden = true
-                        malgrenPortrait.isHidden = true
-                        unknownPortrait.isHidden = false
-                    }
+            if currentLineIndex < dialogueLines.count {
+                let speaker = dialogueLines[currentLineIndex].name
+                nameLabel.text = speaker
+                startTypingText(dialogueLines[currentLineIndex].text)
+                        if speaker == "Myrren" {
+                            myrrenPortrait.isHidden = false
+                            malgrenPortrait.isHidden = true
+                        } else if speaker == "Malgren" {
+                            myrrenPortrait.isHidden = true
+                            malgrenPortrait.isHidden = false
+                        }
                 currentLineIndex += 1
             } else {
-                transitionToGame()
+                transitionToEndCredits()
             }
         }
     
@@ -197,10 +181,11 @@ class IntroCutScene: SKScene {
             }
         }
         
-        func transitionToGame() {
+        func transitionToEndCredits() {
             let transition = SKTransition.fade(withDuration: 1.0)
-            let gameScene = GameScene(fileNamed: "GameScene")!
-            gameScene.scaleMode = .aspectFill
-            self.view?.presentScene(gameScene, transition: transition)
+            let endCreditsScene = EndCreditsScene(size: self.size)
+            endCreditsScene.scaleMode = .aspectFill
+            self.view?.presentScene(endCreditsScene, transition: transition)
         }
     }
+
